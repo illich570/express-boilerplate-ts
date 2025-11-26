@@ -49,4 +49,4 @@ jobs:
             }}/express-boilerplate-ts:buildcache
           cache-to:
             type=registry,ref=${{ secrets.DOCKER_USERNAME
-            }}/express-boilerplate-tsn:buildcache,mode=max
+            }}/express-boilerplate-ts:buildcache,mode=max
