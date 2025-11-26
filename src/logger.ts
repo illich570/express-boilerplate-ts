@@ -1,32 +1,35 @@
 import pino from 'pino';
-const __dirname = import.meta.dirname;
 import { validConfig } from './config.js';
+const __dirname = import.meta.dirname;
 
-const activePretty =
-  validConfig.env === 'development'
-    ? {
+let logger: pino.Logger;
+
+if (validConfig.env === 'development') {
+  const transport = pino.transport({
+    targets: [
+      {
         target: 'pino-pretty',
-      }
-    : {
-        target: 'undefined',
-      };
+        options: { destination: 1 },
+      },
+      {
+        target: 'pino/file',
+        options: { destination: `${__dirname}/${validConfig.logFile}` },
+      },
+    ],
+  });
 
-const transport = pino.transport({
-  targets: [
+  logger = pino(
     {
-      target: 'pino/file',
-      options: { destination: `${__dirname}/${validConfig.logFile}` },
+      level: validConfig.logLevel,
+      timestamp: pino.stdTimeFunctions.isoTime,
     },
-    activePretty,
-  ],
-});
-
-const logger = pino(
-  {
+    transport,
+  );
+} else {
+  logger = pino({
     level: validConfig.logLevel,
     timestamp: pino.stdTimeFunctions.isoTime,
-  },
-  transport,
-);
+  });
+}
 
 export default logger;
