@@ -18,6 +18,10 @@ app.get('/health', (request, response) => {
   response.send({ code: 200, message: 'OK!' });
 });
 
+app.get('/testing', (request, response) => {
+  response.send({ code: 200, message: 'todo ok' });
+});
+
 const server = app.listen(port, () => {
   console.log(`Server alive! Running on PORT: ${port}`);
 });
