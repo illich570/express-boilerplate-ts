@@ -1,0 +1,21 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    image: express-boilerplate-ts:dev
+
+    environment:
+      NODE_ENV: development
+      PORT: ${PORT:-3000}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      LOG_FILE: ${LOG_FILE:-server.log}
+    env_file:
+      - .env
+    command: pnpm dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - '${PORT:-3000}:3000'
+    restart: unless-stopped
