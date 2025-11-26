@@ -1,21 +1,25 @@
-import { createServer } from "./app.js";
-import morgan from "morgan";
-import { pinoHttp } from "pino-http";
-import logger from "./logger.js";
-const environment = process.env.NODE_ENV || "development";
+import { pinoHttp } from 'pino-http';
+import { createServer } from './app.js';
+import logger from './logger.js';
 const port = Number(process.env.PORT) || 3000;
 const app = createServer();
 app.use(pinoHttp({
     logger,
 }));
-app.use(environment === "development" ? morgan("dev") : morgan("tiny"));
+app.get('/', (request, response) => {
+    request.log.info('Hello!');
+    response.send('hello world');
+});
+app.get('/health', (request, response) => {
+    response.send({ code: 200, message: 'OK!' });
+});
 const server = app.listen(port, () => {
     console.log(`Server alive! Running on PORT: ${port}`);
 });
-process.on("SIGTERM", () => {
-    console.log("SIGTERM signal received: closing HTTP server");
+process.on('SIGTERM', () => {
+    console.log('SIGTERM signal received: closing HTTP server');
     server.close(() => {
-        console.log("HTTP server closed");
+        console.log('HTTP server closed');
     });
 });
 //# sourceMappingURL=server.js.map

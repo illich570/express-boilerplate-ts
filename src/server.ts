@@ -10,8 +10,12 @@ app.use(
 );
 
 app.get('/', (request, response) => {
-  request.log.info('Request recieved!');
+  request.log.info('Hello!');
   response.send('hello world');
+});
+
+app.get('/health', (request, response) => {
+  response.send({ code: 200, message: 'OK!' });
 });
 
 const server = app.listen(port, () => {

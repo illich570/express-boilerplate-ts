@@ -1,24 +1,24 @@
-import pino from "pino";
-const environment = process.env.NODE_ENV || "development";
+import pino from 'pino';
 const __dirname = import.meta.dirname;
-const activePretty = environment
+import { validConfig } from './config.js';
+const activePretty = validConfig.env === 'development'
     ? {
-        target: "pino-pretty",
+        target: 'pino-pretty',
     }
     : {
-        target: "undefined",
+        target: 'undefined',
     };
 const transport = pino.transport({
     targets: [
         {
-            target: "pino/file",
-            options: { destination: `${__dirname}/server.log` },
+            target: 'pino/file',
+            options: { destination: `${__dirname}/${validConfig.logFile}` },
         },
         activePretty,
     ],
 });
 const logger = pino({
-    level: process.env.PINO_LOG_LEVEL || "info",
+    level: validConfig.logLevel,
     timestamp: pino.stdTimeFunctions.isoTime,
 }, transport);
 export default logger;
