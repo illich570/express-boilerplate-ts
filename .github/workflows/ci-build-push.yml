@@ -49,7 +49,7 @@ jobs:
         run: pnpm lint
 
       - name: Test
-        run: pnpm test -- --watch=false
+        run: pnpm test --watch=false
 
       - name: Build
         run: pnpm build
