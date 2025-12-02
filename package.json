@@ -9,11 +9,13 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "format": "prettier --write .",
+    "format:check": "prettier --check",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "jest",
     "prepare": "husky",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
