@@ -1,4 +1,5 @@
 import pino from 'pino';
+
 import { validConfig } from './config.js';
 const __dirname = import.meta.dirname;
 
