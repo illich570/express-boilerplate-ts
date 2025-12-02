@@ -1,16 +1,64 @@
-name: Build and Push Docker Image
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
+      - 'feature/**'
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
-  build-and-push:
+  test-and-build:
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      CI: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 10.23.0
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Format check (Prettier)
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test --watch=false
+
+      - name: Build
+        run: pnpm build
+
+  build-and-push-docker:
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    # Solo construir imagen en push a main o tags, no en PRs ni feature branches
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main')
 
     steps:
       - name: Checkout code
@@ -32,6 +80,7 @@ jobs:
           images: ${{ secrets.DOCKER_USERNAME }}/express-boilerplate-ts
           tags: |
             type=ref,event=branch
+            type=ref,event=tag
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
