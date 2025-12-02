@@ -13,7 +13,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
-    "prepare": "husky",
+    "prepare": "if [ -x node_modules/.bin/husky ]; then node_modules/.bin/husky install; else echo \"Skipping husky install (dev deps not present)\"; fi",
     "lint-staged": "lint-staged",
     "typecheck": "tsc --noEmit"
   },
