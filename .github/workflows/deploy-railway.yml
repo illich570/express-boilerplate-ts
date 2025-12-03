@@ -1,18 +1,20 @@
-# .github/workflows/deploy.yml
 name: Deploy to Railway
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows:
+      - CI/CD Pipeline
+    types:
+      - completed
 
 jobs:
-  # STAGING: cuando hay push a main
+  # STAGING: cuando el pipeline de CI/CD termina ok en main
   deploy-staging:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     container: ghcr.io/railwayapp/cli:latest
 
     env:
@@ -21,49 +23,49 @@ jobs:
 
     steps:
       - name: Redeploy service on Railway (staging)
+        run: railway redeploy --service="$RAILWAY_SERVICE" -y
+
+  # PROD: cuando se etiqueta un release v* (usa la imagen ya construida en main)
+  deploy-prod:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch &&
+      startsWith(github.event.workflow_run.head_branch, 'v')
+    runs-on: ubuntu-latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE_PROD }}
+      IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/express-boilerplate-ts
+      IMAGE_TAG: ${{ github.event.workflow_run.head_branch }}
+      IMAGE_SHA: ${{ github.event.workflow_run.head_sha }}
+
+    steps:
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Usamos la imagen construida en el workflow de CI para este commit SHA
+      - name: Pull image built from CI
+        run: docker pull "$IMAGE_NAME:$IMAGE_SHA"
+
+      - name: Tag image for production
         run: |
-          railway redeploy --service="$RAILWAY_SERVICE" -y
+          docker tag "$IMAGE_NAME:$IMAGE_SHA" "$IMAGE_NAME:prod"
+          docker tag "$IMAGE_NAME:$IMAGE_SHA" "$IMAGE_NAME:$IMAGE_TAG"
 
-  # # PROD: cuando hay push de una tag v*
-  # deploy-prod:
-  #   runs-on: ubuntu-latest
-  #   if: startsWith(github.ref, 'refs/tags/v')
+      - name: Push production tags
+        run: |
+          docker push "$IMAGE_NAME:prod"
+          docker push "$IMAGE_NAME:$IMAGE_TAG"
 
-  #   steps:
-  #     - name: Log in to Docker Hub
-  #       uses: docker/login-action@v3
-  #       with:
-  #         username: ${{ secrets.DOCKER_USERNAME }}
-  #         password: ${{ secrets.DOCKER_PASSWORD }}
-
-  #     # Importante: esto asume que ya existe la imagen con este SHA
-  #     # porque se construyó cuando ese commit se mergeó a main.
-  #     - name: Pull image built from this commit
-  #       run: |
-  #         docker pull ${{ secrets.DOCKER_USERNAME }}/express-boilerplate-ts:${{ github.sha }}
-
-  #     - name: Tag image for production
-  #       run: |
-  #         # Alias para producción
-  #         docker tag \
-  #           ${{ secrets.DOCKER_USERNAME }}/express-boilerplate-ts:${{ github.sha }} \
-  #           ${{ secrets.DOCKER_USERNAME }}/express-boilerplate-ts:prod
-
-  #         # Alias con la versión (nombre de la tag, tipo v1.2.3)
-  #         docker tag \
-  #           ${{ secrets.DOCKER_USERNAME }}/express-boilerplate-ts:${{ github.sha }} \
-  #           ${{ secrets.DOCKER_USERNAME }}/express-boilerplate-ts:${{ github.ref_name }}
-
-  #     - name: Push production tags
-  #       run: |
-  #         docker push ${{ secrets.DOCKER_USERNAME }}/express-boilerplate-ts:prod
-  #         docker push ${{ secrets.DOCKER_USERNAME }}/express-boilerplate-ts:${{ github.ref_name }}
-
-  #     - name: Deploy to Railway (prod)
-  #       uses: docker://ghcr.io/railwayapp/cli:latest
-  #       env:
-  #         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-  #         RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE_PROD }}
-  #       with:
-  #         entrypoint: /bin/sh
-  #         args: -lc 'railway redeploy --service="$RAILWAY_SERVICE" -y'
+      - name: Deploy to Railway (prod)
+        uses: docker://ghcr.io/railwayapp/cli:latest
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE_PROD }}
+        with:
+          entrypoint: /bin/sh
+          args: -lc 'railway redeploy --service="$RAILWAY_SERVICE" -y'
