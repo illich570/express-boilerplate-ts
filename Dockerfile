@@ -1,6 +1,7 @@
 
 FROM node:20-alpine AS base
 WORKDIR /app
+ENV HUSKY=0
 RUN corepack enable && corepack prepare pnpm@10.23.0 --activate
 
 FROM base AS deps
