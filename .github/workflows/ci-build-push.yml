@@ -60,8 +60,6 @@ jobs:
   build-and-push-docker:
     needs: test-and-build
     runs-on: ubuntu-latest
-    env:
-      HUSKY: 0
     # Solo construir imagen en push a main (no se reconstruye en tags)
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
