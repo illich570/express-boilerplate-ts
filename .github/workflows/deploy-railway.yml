@@ -35,7 +35,7 @@ jobs:
 
     steps:
       - name: Redeploy service on Railway (staging)
-        run: railway redeploy --service="$RAILWAY_SERVICE" --environment="staging" -y
+        run: railway redeploy --service="$RAILWAY_SERVICE" -y
 
   # PRODUCTION: when a version tag is pushed (promotes latest image from staging)
   deploy-prod:
@@ -77,4 +77,4 @@ jobs:
           RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE_PROD }}
         with:
           entrypoint: /bin/sh
-          args: -lc 'railway redeploy --service="$RAILWAY_SERVICE" --environment="production" -y'
+          args: -lc 'railway redeploy --service="$RAILWAY_SERVICE" -y'
