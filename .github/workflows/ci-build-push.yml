@@ -5,8 +5,6 @@ on:
     branches:
       - main
       - 'feature/**'
-    tags:
-      - 'v*'
   pull_request:
     branches:
       - main
@@ -14,10 +12,12 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test-and-build:
-    # Omit tests/build when workflow triggered by release tag
-    if: github.event_name != 'push' || !startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     env:
       NODE_ENV: test

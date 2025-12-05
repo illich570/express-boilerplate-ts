@@ -1,20 +1,32 @@
 name: Deploy to Railway
 
 on:
+  # Staging: triggered after CI/CD Pipeline completes on main
   workflow_run:
     workflows:
       - CI/CD Pipeline
     types:
       - completed
 
+  # Production: triggered directly by tag push
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: deploy-${{ github.event_name == 'push' && 'prod' || 'staging' }}
+  cancel-in-progress: false
+
 jobs:
-  # STAGING: cuando el pipeline de CI/CD termina ok en main
+  # STAGING: when CI/CD pipeline succeeds on main branch
   deploy-staging:
     if: >
+      github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
+    environment: staging
     container: ghcr.io/railwayapp/cli:latest
 
     env:
@@ -25,20 +37,17 @@ jobs:
       - name: Redeploy service on Railway (staging)
         run: railway redeploy --service="$RAILWAY_SERVICE" -y
 
-  # PROD: cuando se etiqueta un release v* (usa la imagen ya construida en main)
+  # PRODUCTION: when a version tag is pushed (promotes latest image from staging)
   deploy-prod:
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch &&
-      startsWith(github.event.workflow_run.head_branch, 'v')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+    environment: production
+
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE_PROD }}
       IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/express-boilerplate-ts
-      IMAGE_TAG: ${{ github.event.workflow_run.head_branch }}
-      IMAGE_SHA: ${{ github.event.workflow_run.head_sha }}
+      TAG_NAME: ${{ github.ref_name }}
 
     steps:
       - name: Log in to Docker Hub
@@ -47,19 +56,19 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Usamos la imagen construida en el workflow de CI para este commit SHA
-      - name: Pull image built from CI
-        run: docker pull "$IMAGE_NAME:$IMAGE_SHA"
+      # Pull the latest image (built and tested on main, deployed to staging)
+      - name: Pull latest image from staging
+        run: docker pull "$IMAGE_NAME:latest"
 
       - name: Tag image for production
         run: |
-          docker tag "$IMAGE_NAME:$IMAGE_SHA" "$IMAGE_NAME:prod"
-          docker tag "$IMAGE_NAME:$IMAGE_SHA" "$IMAGE_NAME:$IMAGE_TAG"
+          docker tag "$IMAGE_NAME:latest" "$IMAGE_NAME:prod"
+          docker tag "$IMAGE_NAME:latest" "$IMAGE_NAME:$TAG_NAME"
 
       - name: Push production tags
         run: |
           docker push "$IMAGE_NAME:prod"
-          docker push "$IMAGE_NAME:$IMAGE_TAG"
+          docker push "$IMAGE_NAME:$TAG_NAME"
 
       - name: Deploy to Railway (prod)
         uses: docker://ghcr.io/railwayapp/cli:latest
