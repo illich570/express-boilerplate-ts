@@ -69,10 +69,9 @@ jobs:
           docker push "$IMAGE_NAME:$TAG_NAME"
 
       - name: Deploy to Railway (prod)
-        uses: docker://ghcr.io/railwayapp/cli:latest
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE }}
-        with:
-          entrypoint: /bin/sh
-          args: -lc 'railway redeploy --service="$RAILWAY_SERVICE" -y'
+        run: |
+          docker run --rm \
+            -e RAILWAY_TOKEN="${{ secrets.RAILWAY_TOKEN }}" \
+            -e RAILWAY_SERVICE="${{ secrets.RAILWAY_SERVICE }}" \
+            ghcr.io/railwayapp/cli:latest \
+            railway redeploy --service="$RAILWAY_SERVICE" -y
