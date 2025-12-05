@@ -45,7 +45,7 @@ jobs:
 
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE_PROD }}
+      RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE }}
       IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/express-boilerplate-ts
       TAG_NAME: ${{ github.ref_name }}
 
