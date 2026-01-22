@@ -24,6 +24,10 @@ export default defineConfig([
       'simple-import-sort': simpleImportSort,
     },
     rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       'unicorn/better-regex': 'warn',

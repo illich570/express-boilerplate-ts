@@ -1,6 +1,6 @@
 import pino from 'pino';
 
-import { validConfig } from './config.js';
+import { validConfig } from '../../config.js';
 const __dirname = import.meta.dirname;
 
 let logger: pino.Logger;
