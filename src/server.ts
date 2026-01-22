@@ -1,7 +1,9 @@
 import { pinoHttp } from 'pino-http';
 
 import { createServer } from './app.js';
-import logger from './logger.js';
+import { AppError } from './infrastructure/app-error.js';
+import logger from './infrastructure/logger/pino-logger.js';
+import { errorHandler } from './presentation/middleware/error-handler.js';
 const port = Number(process.env.PORT) || 3000;
 const app = createServer();
 app.use(
@@ -20,8 +22,11 @@ app.get('/health', (request, response) => {
 });
 
 app.get('/testing', (request, response) => {
+  throw new AppError('La vaina se complico', 400);
   response.send({ code: 200, message: 'todo ok' });
 });
+
+app.use(errorHandler);
 
 const server = app.listen(port, () => {
   console.log(`Server alive! Running on PORT: ${port}`);
