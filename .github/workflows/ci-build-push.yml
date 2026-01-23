@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - 'feature/**'
   pull_request:
     branches:
       - main
@@ -32,7 +31,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 10.23.0
+          version: 10.28.1
           run_install: false
 
       - name: Install Node.js
@@ -42,6 +41,10 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Audit dependencies for vulnerabilities
+        run: pnpm audit --audit-level=moderate
+        continue-on-error: false
 
       - name: Typecheck
         run: pnpm typecheck
