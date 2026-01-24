@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import logger from '~/infrastructure/logger/pino-logger.js';
+import logger from '../../infrastructure/logger/pino-logger.js';
 
 export const errorHandler = (
   error: { message: string; status: number; details?: Array<string> },
