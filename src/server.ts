@@ -26,6 +26,10 @@ app.get('/testing', (request, response) => {
   response.send({ code: 200, message: 'todo ok' });
 });
 
+app.get('/testing_2', (request, response) => {
+  response.send({ code: 200, message: 'todo ok' });
+});
+
 app.use(errorHandler);
 
 const server = app.listen(port, () => {
