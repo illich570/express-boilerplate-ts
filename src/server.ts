@@ -1,9 +1,9 @@
 import { pinoHttp } from 'pino-http';
 
 import { createServer } from './app.js';
-import { AppError } from './infrastructure/app-error.js';
 import logger from './infrastructure/logger/pino-logger.js';
 import { errorHandler } from './presentation/middleware/error-handler.js';
+import { healthRouter } from './presentation/routes/health.routes.js';
 const port = Number(process.env.PORT) || 3000;
 const app = createServer();
 app.use(
@@ -12,23 +12,7 @@ app.use(
   }),
 );
 
-app.get('/', (request, response) => {
-  request.log.info('Hello!');
-  response.send('hello world');
-});
-
-app.get('/health', (request, response) => {
-  response.send({ code: 200, message: 'OK!' });
-});
-
-app.get('/testing', (request, response) => {
-  throw new AppError('La vaina se complico', 400);
-  response.send({ code: 200, message: 'todo ok' });
-});
-
-app.get('/testing_2', (request, response) => {
-  response.send({ code: 200, message: 'todo ok' });
-});
+app.use(healthRouter);
 
 app.use(errorHandler);
 

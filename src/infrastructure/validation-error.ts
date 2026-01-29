@@ -4,6 +4,6 @@ export class ValidationError extends AppError {
   private readonly details: Array<string>;
   constructor(message: string, details: Array<string>) {
     super(message, 400);
-    this.details = details; // Additional validation details
+    this.details = details;
   }
 }
