@@ -7,6 +7,10 @@ const ConfigSchema = z.object({
   port: z.string().transform(Number),
   logLevel: z.string(),
   logFile: z.string(),
+  dbUser: z.string(),
+  dbPassword: z.string(),
+  dbName: z.string(),
+  dbPort: z.string(),
 });
 
 const validConfig = ConfigSchema.parse({
@@ -14,6 +18,10 @@ const validConfig = ConfigSchema.parse({
   port: process.env.PORT,
   logLevel: process.env.LOG_LEVEL,
   logFile: process.env.LOG_FILE,
+  dbUser: process.env.DB_USER,
+  dbPassword: process.env.DB_PASSWORD,
+  dbName: process.env.DB_NAME,
+  dbPort: process.env.DB_PORT,
 });
 
 export { validConfig };
